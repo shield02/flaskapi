@@ -19,7 +19,7 @@ tasks = [
 ]
 
 @app.route('/todo/api/v1.0/tasks', methods=['GET'])
-def get_task():
+def get_tasks():
     return jsonify({'tasks': tasks})
 
 if __name__ == "__main__":
