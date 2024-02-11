@@ -3,11 +3,45 @@
 
 a Flask extension that simplifies the creation of APIs
 """
-from flask import Flask
-from flask_restful import Api, Resource, reqparse
+from flask import Flask, abort, jsonify, url_for
+from flask_restful import Api, Resource, reqparse, fields, marshal
+
 
 app = Flask(__name__)
 api = Api()
+
+
+tasks = [
+    {
+        'id': 1,
+        'title': u'Buy groceries',
+        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
+        'done': False
+    },
+    {
+        'id': 2,
+        'title': u'Learn Python',
+        'description': u'Need to find a good Python tutorial on the web',
+        'done': False
+    }
+]
+
+task_fields = {
+    'title': fields.String,
+    'description': fields.String,
+    'done': fields.Boolean,
+    'uri': fields.Url('task')
+}
+
+def make_public_task(task):
+    new_task = {}
+    for field in task:
+        if field == 'id':
+            new_task['uri'] = url_for('get_task', task_id=task['id'], _external=True)
+        else:
+            new_task[field] = task[field]
+    return new_task
+
 
 class UserAPI(Resource):
     def get(self, id):
@@ -18,6 +52,7 @@ class UserAPI(Resource):
 
     def delete(self, id):
         pass
+
 
 class TaskListAPI(Resource):
     def __init__(self):
@@ -33,6 +68,7 @@ class TaskListAPI(Resource):
     def post(self):
         pass
 
+
 class TaskAPI(Resource):
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
@@ -45,7 +81,15 @@ class TaskAPI(Resource):
         pass
 
     def put(self, id):
-        pass
+        task = list(filter(lambda task: task['id'] == id, tasks))
+        if len(task) == 0:
+            abort(404)
+        task = task[0]
+        args = self.reqparse.parse_args()
+        for k, v in args.iteritems():
+            if v != None:
+                task[k] = v
+        return { 'task': marshal(task, task_fields) }
 
     def delete(self, id):
         pass
