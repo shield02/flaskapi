@@ -5,10 +5,12 @@ a Flask extension that simplifies the creation of APIs
 """
 from flask import Flask, abort, jsonify, url_for
 from flask_restful import Api, Resource, reqparse, fields, marshal
+from flask_httpauth import HTTPBasicAuth
 
 
 app = Flask(__name__)
 api = Api()
+auth = HTTPBasicAuth()
 
 
 tasks = [
@@ -44,6 +46,9 @@ def make_public_task(task):
 
 
 class UserAPI(Resource):
+    decorators = [auth.login_required]
+
+
     def get(self, id):
         pass
 
@@ -55,6 +60,9 @@ class UserAPI(Resource):
 
 
 class TaskListAPI(Resource):
+    decorators = [auth.login_required]
+
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('title', type = str, required = True,
@@ -70,6 +78,9 @@ class TaskListAPI(Resource):
 
 
 class TaskAPI(Resource):
+    decorators = [auth.login_required]
+
+
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
         self.reqparse.add_argument('title', type = str,location = 'json')
