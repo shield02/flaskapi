@@ -3,13 +3,13 @@
 
 a Flask extension that simplifies the creation of APIs
 """
-from flask import Flask, abort, jsonify, url_for
+from flask import Flask, abort, jsonify, url_for, make_response
 from flask_restful import Api, Resource, reqparse, fields, marshal
 from flask_httpauth import HTTPBasicAuth
 
 
 app = Flask(__name__)
-api = Api()
+api = Api(app)
 auth = HTTPBasicAuth()
 
 
@@ -48,7 +48,6 @@ def make_public_task(task):
 class UserAPI(Resource):
     decorators = [auth.login_required]
 
-
     def get(self, id):
         pass
 
@@ -61,7 +60,6 @@ class UserAPI(Resource):
 
 class TaskListAPI(Resource):
     decorators = [auth.login_required]
-
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
@@ -79,7 +77,6 @@ class TaskListAPI(Resource):
 
 class TaskAPI(Resource):
     decorators = [auth.login_required]
-
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
@@ -105,6 +102,11 @@ class TaskAPI(Resource):
     def delete(self, id):
         pass
 
+
 api.add_resource(UserAPI, '/users/<int:id>', endpoint = 'user')
 api.add_resource(TaskListAPI, '/todo/api/v1.0/tasks', endpoint = 'tasks')
 api.add_resource(TaskAPI, '/todo/api/v1.0/tasks/<int:id>', endpoint = 'task')
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
