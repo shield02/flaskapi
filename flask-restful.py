@@ -13,6 +13,18 @@ api = Api(app)
 auth = HTTPBasicAuth()
 
 
+@auth.get_password
+def get_password(username):
+    if username == 'king':
+        return 'good'
+    return None
+
+@auth.error_handler
+def unauthorized():
+    # return 403 instead of 401, prevent browser from displaying default dialog
+    return make_response(jsonify({ 'message': 'Unauthorized access' }), 403)
+
+
 tasks = [
     {
         'id': 1,
@@ -69,10 +81,18 @@ class TaskListAPI(Resource):
         super(TaskListAPI, self).__init__()
     
     def get(self):
-        pass
+        return {'task': [marshal(task, task_fields) for task in tasks]}
 
     def post(self):
-        pass
+        args = self.reqparse.parse_args()
+        task = {
+            'id': tasks[-1]['id'] + 1 if len(tasks) > 0 else 1,
+            'title': args['title'],
+            'description': args['description'],
+            'done': False
+        }
+        tasks.append(task)
+        return {'task': marshal(task, task_fields)}, 201
 
 
 class TaskAPI(Resource):
@@ -86,7 +106,10 @@ class TaskAPI(Resource):
         super(TaskAPI, self).__init__()
 
     def get(self, id):
-        pass
+        task = list(filter(lambda task: task['id'] == id, tasks))
+        if len(task) == 0:
+            abort(404)
+        return {'task':marshal(task[0], task_fields)}
 
     def put(self, id):
         task = list(filter(lambda task: task['id'] == id, tasks))
@@ -100,7 +123,11 @@ class TaskAPI(Resource):
         return { 'task': marshal(task, task_fields) }
 
     def delete(self, id):
-        pass
+        task = list(filter(lambda task: task['id'] == id, tasks))
+        if len(task) == 0:
+            abort(404)
+        tasks.remove(task[0])
+        return {'result': True}
 
 
 api.add_resource(UserAPI, '/users/<int:id>', endpoint = 'user')
